@@ -1,0 +1,129 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    environment:
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-1}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-24h}
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-1}
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - internal
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - TZ=${TZ:-UTC}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-}
+      - RAG_SYSTEM_CONTEXT=${RAG_SYSTEM_CONTEXT:-true}
+      - WEB_FETCH_MAX_CONTENT_LENGTH=${WEB_FETCH_MAX_CONTENT_LENGTH:-50000}
+      - SEARXNG_QUERY_URL=${SEARXNG_QUERY_URL:-http://searxng:8080/search}
+    volumes:
+      - open_webui_data:/app/backend/data
+    networks:
+      - internal
+    # Fuer lokale Fehleranalyse bei Bedarf kurzzeitig freigeben:
+    # ports:
+    #   - "3000:8080"
+
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    environment:
+      - SEARXNG_BASE_URL=http://searxng:8080/
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - open-webui
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/certs:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - internal
+
+  signal-cli-rest-api:
+    profiles: ["signal"]
+    image: docker.io/bbernhard/signal-cli-rest-api:latest
+    restart: unless-stopped
+    environment:
+      - MODE=${SIGNAL_CLI_MODE:-native}
+    volumes:
+      - signal_cli_data:/home/.local/share/signal-cli
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    networks:
+      - internal
+
+  signal-bridge:
+    profiles: ["signal"]
+    build:
+      context: ./signal-bridge
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - open-webui
+      - signal-cli-rest-api
+    environment:
+      - SIGNAL_REST_URL=http://signal-cli-rest-api:8080
+      - OPENWEBUI_BASE_URL=http://open-webui:8080
+      - SIGNAL_BOT_NUMBER=${SIGNAL_BOT_NUMBER:?set SIGNAL_BOT_NUMBER in .env}
+      - SIGNAL_ALLOWLIST=${SIGNAL_ALLOWLIST:?set SIGNAL_ALLOWLIST in .env}
+      - OPENWEBUI_API_KEY=${OPENWEBUI_API_KEY:?set OPENWEBUI_API_KEY in .env}
+      - OPENWEBUI_MODEL=${OPENWEBUI_MODEL:?set OPENWEBUI_MODEL in .env}
+      - PAIRING_ENABLED=${PAIRING_ENABLED:-0}
+      - PAIRING_SECRET=${PAIRING_SECRET:-}
+      - OPENWEBUI_KNOWLEDGE_ID=${OPENWEBUI_KNOWLEDGE_ID:-}
+      - RATE_LIMIT_SECONDS=${RATE_LIMIT_SECONDS:-3}
+      - OPENWEBUI_MAX_HISTORY_MESSAGES=${OPENWEBUI_MAX_HISTORY_MESSAGES:-40}
+      - OPENWEBUI_READ_TIMEOUT_SECONDS=${OPENWEBUI_READ_TIMEOUT_SECONDS:-600}
+      - SQLITE_PATH=/data/bridge.sqlite3
+      - HEALTH_PORT=8765
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SIGNAL_USE_HTTP_POLL=${SIGNAL_USE_HTTP_POLL:-0}
+      - SIGNAL_RECEIVE_MODE=${SIGNAL_RECEIVE_MODE:-http}
+      - SIGNAL_HTTP_RECEIVE_TIMEOUT=${SIGNAL_HTTP_RECEIVE_TIMEOUT:-30}
+      - SIGNAL_HTTP_CLIENT_TOTAL_TIMEOUT=${SIGNAL_HTTP_CLIENT_TOTAL_TIMEOUT:-}
+    volumes:
+      - signal_bridge_data:/data
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    networks:
+      - internal
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  ollama_data:
+  open_webui_data:
+  caddy_data:
+  caddy_config:
+  signal_cli_data:
+  signal_bridge_data:

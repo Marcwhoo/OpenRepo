@@ -1,0 +1,16 @@
+[Unit]
+Description=Run one-shot intranet RAG full rebuild
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=-/opt/private-ai-platform/scripts/intranet_rag/.env
+ExecStart=/usr/bin/flock -n /run/private-ai-platform-intranet-rag-fullrebuild.lock /opt/private-ai-platform/scripts/intranet_rag/run-fullrebuild.sh
+TimeoutStartSec=18000
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

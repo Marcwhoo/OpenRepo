@@ -1,0 +1,14 @@
+[Unit]
+Description=Push intranet RAG files into Open WebUI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=-/opt/private-ai-platform/scripts/intranet_rag/.env
+ExecStart=/usr/bin/flock -n /run/private-ai-platform-intranet-rag-owui-push.lock /opt/private-ai-platform/scripts/intranet_rag/venv/bin/python -u /opt/private-ai-platform/scripts/intranet_rag/push_to_openwebui_kb.py
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

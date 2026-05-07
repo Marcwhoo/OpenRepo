@@ -1,0 +1,6 @@
+# Nach Caddyfile kopieren und an eigene Umgebung anpassen.
+
+ai.example.org {
+	tls /certs/fullchain.pem /certs/privkey.pem
+	reverse_proxy open-webui:8080
+}

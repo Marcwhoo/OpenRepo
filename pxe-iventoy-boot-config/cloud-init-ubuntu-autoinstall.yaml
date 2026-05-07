@@ -1,0 +1,69 @@
+#cloud-config
+# Ubuntu Server 20.x+ - cloud-init fuer iVentoy
+# Installiert auf erste nicht-USB Platte
+# UTF-8 Encoding erforderlich!
+# Disk: /dev/$$VT_LINUX_DISK_SDX_1ST_NONUSB$$ - manuell anpassen oder Variable nutzen
+# Hinweis: cloud-init unterstuetzt iVentoy-Variablen evtl. nicht direkt - ggf. vorab ersetzen
+
+autoinstall:
+  apt:
+    geoip: true
+    preserve_sources_list: false
+    primary:
+      - arches: [amd64, i386]
+        uri: http://archive.ubuntu.com/ubuntu
+      - arches: [default]
+        uri: http://ports.ubuntu.com/ubuntu-ports
+
+  identity:
+    hostname: ubuntu-server
+    realname: Ubuntu User
+    username: ubuntu
+    password: "<HASHED-PASSWORD>"  # Generate with: openssl passwd -6 yourpassword
+
+  keyboard:
+    layout: de
+    variant: ''
+
+  locale: de_DE.UTF-8
+
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+    install-server: true
+
+  storage:
+    config:
+      - ptable: gpt
+        path: /dev/sda
+        wipe: superblock-recursive
+        preserve: false
+        name: ''
+        grub_device: true
+        type: disk
+        id: disk-sda
+      - device: disk-sda
+        size: 1048576
+        flag: bios_grub
+        number: 1
+        preserve: false
+        type: partition
+        id: partition-0
+      - device: disk-sda
+        size: -1
+        wipe: superblock
+        flag: ''
+        number: 2
+        preserve: false
+        type: partition
+        id: partition-1
+      - fstype: ext4
+        volume: partition-1
+        preserve: false
+        type: format
+        id: format-0
+      - device: format-0
+        path: /
+        type: mount
+        id: mount-0
+    version: 1

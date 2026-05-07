@@ -1,0 +1,14 @@
+[Unit]
+Description=Export directory entries for RAG
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=-/opt/private-ai-platform/scripts/intranet_rag/.env
+ExecStart=/usr/bin/flock -n /run/private-ai-platform-directory-rag-export.lock /opt/private-ai-platform/scripts/intranet_rag/venv/bin/python -u /opt/private-ai-platform/scripts/directory_rag/export_ldap_directory.py export
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=One-shot timer for intranet RAG full rebuild
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=false
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Push directory RAG files into Open WebUI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=-/opt/private-ai-platform/scripts/intranet_rag/.env
+ExecStart=/usr/bin/flock -n /run/private-ai-platform-directory-rag-owui-push.lock /bin/bash -c 'exec /opt/private-ai-platform/scripts/intranet_rag/venv/bin/python -u /opt/private-ai-platform/scripts/intranet_rag/push_to_openwebui_kb.py --knowledge-id "${OPENWEBUI_KNOWLEDGE_ID_DIRECTORY}" --sync-dir "${DIRECTORY_OUTPUT_DIR}" --state-file "${DIRECTORY_OUTPUT_DIR}/.openwebui-state.json"'
+Nice=10
+TimeoutStartSec=14400
+
+[Install]
+WantedBy=multi-user.target

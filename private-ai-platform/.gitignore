@@ -1,0 +1,9 @@
+docker/.env
+docker/Caddyfile
+docker/certs/*.pem
+docker/certs/*.key
+docker/certs/*.crt
+docker/certs/*.p7b
+scripts/**/.env
+scripts/**/venv/
+data/

@@ -1,0 +1,50 @@
+﻿Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-22.04"
+  config.vm.box_check_update = true
+
+  # Variablen definieren für Portabilität
+  MASTER_IP = "<HOME-NETWORK-IP>"
+  WORKER_IPS = ["<HOME-NETWORK-IP>", "<HOME-NETWORK-IP>"]
+  # Bridge-Adapter fest
+  BRIDGE = "<BRIDGE-ADAPTER-NAME>"
+
+  # Gemeinsame Provision für alle VMs
+  config.vm.provision "shell", inline: <<-SCRIPT
+    echo '#{MASTER_IP} master' >> /etc/hosts
+    #{WORKER_IPS.each_with_index.map { |ip, i| "echo '#{ip} worker0#{i+1}' >> /etc/hosts" }.join("\n    ")}
+  SCRIPT
+
+  # Master VM
+  config.vm.define "master" do |master|
+    master.vm.hostname = "master"
+    master.vm.network "public_network", bridge: BRIDGE, auto_config: false
+    master.vm.provider "virtualbox" do |vb|
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+    master.vm.provision "shell", path: "scripts/common.sh", env: {"NODE_IP" => "<HOME-NETWORK-IP>"}, run: "always"
+    master.vm.provision "shell", path: "scripts/master.sh", run: "always"
+  end
+
+  # Worker-Nodes mit Schleife (skalierbar)
+  WORKER_IPS.each_with_index do |ip, index|
+    config.vm.define "node0#{index+1}" do |node|
+      node.vm.box = "bento/ubuntu-22.04"
+      node.vm.hostname = "worker0#{index+1}"
+      node.vm.network "public_network", bridge: BRIDGE, auto_config: false
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048  
+        vb.cpus = 1       
+      end
+      node.vm.provision "shell", path: "scripts/common.sh", env: {"NODE_IP" => ip}, run: "always"
+      node.vm.provision "shell", path: "scripts/node.sh"
+    end
+  end
+
+  # Globaler Trigger für Reloads (z.B. Services neu starten)
+  config.trigger.after :reload do |trigger|
+    trigger.run_remote do |remote|
+      remote.inline = "systemctl restart kubelet docker containerd"
+    end
+  end
+end

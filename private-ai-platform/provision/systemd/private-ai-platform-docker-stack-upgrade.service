@@ -1,0 +1,11 @@
+[Unit]
+Description=Pull and redeploy private-ai-platform compose stack
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/private-ai-platform-docker
+ExecStart=/bin/bash -c 'set -euo pipefail; cd "${COMPOSE_DIR}"; docker compose pull; docker compose up -d'
+Nice=10

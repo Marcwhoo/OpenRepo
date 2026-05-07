@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily directory export for RAG
+
+[Timer]
+OnCalendar=*-*-* 03:05:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

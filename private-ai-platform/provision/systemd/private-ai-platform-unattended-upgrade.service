@@ -1,0 +1,9 @@
+[Unit]
+Description=Run unattended-upgrade for private-ai-platform host
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/unattended-upgrade
+Nice=10
