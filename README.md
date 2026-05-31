@@ -2,7 +2,7 @@
 
 Im Hauptjob betreue ich rund 2.000 Endgeraete an 70 Standorten, 80+ VMs auf VMware vSphere HCI sowie den vollstaendigen Windows-Server-Stack (AD, GPO, DNS, DHCP, DFS, RDS, Microsoft 365). Schwerpunkt im Tagesgeschaeft: Automatisierung mit PowerShell und Bash, Endpoint Security, PXE-basierte Geraeteprovisionierung, Migrationen.
 
-Privat baue ich seit laengerem ein eigenes 3-Node-Kubernetes-Cluster (Vagrant, Terraform, MetalLB, Longhorn, NGINX Ingress, cert-manager, Prometheus/Grafana, Pi-hole, Trivy) und arbeite gezielt in Richtung Linux-Administration und DevOps.
+Privat baue ich ein eigenes 3-Node-Kubernetes-Cluster (Vagrant, Terraform, MetalLB, Longhorn, NGINX Ingress, cert-manager, Prometheus/Grafana, Pi-hole, Trivy) und arbeite gezielt in Richtung Linux-Administration und DevOps.
 
 Dieses Repository sammelt Skripte, Configs und Dokumentation aus echten Projekten - intern entstanden, fuer die Veroeffentlichung um Hostnamen, Firmennamen, Pfade und vergleichbare interne Werte bereinigt.
 
