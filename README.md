@@ -56,5 +56,6 @@ iVentoy PXE with unattended Windows 11 (Schneegans generator, NIC driver injecti
 ## Contact
 
 Marc Hinzmann
-Website: [@Marc](https://hinzmann.dev)
+Website: [@hinzmann.dev](https://hinzmann.dev)
+
 GitHub: [@Marcwhoo](https://github.com/Marcwhoo)
